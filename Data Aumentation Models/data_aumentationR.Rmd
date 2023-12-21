@@ -1,7 +1,27 @@
+---
+title: "Data Generation"
+author: "Pedro Victor Brasil Ribeiro"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
 
-library(tidyverse)
-library(mirt)
+```{r setup, include=FALSE}
+source('https://raw.githubusercontent.com/ribeiropvb/Util/main/install_packages_if_not_exist.R')
 
+packages <- c('tidyverse', 'mirt')
+install_packages_if_not_exist(packages)
+pacman::p_load(tidyverse, mirt)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = TRUE,
+	warning = TRUE
+)
+```
+
+# Data Simulation Method
+
+```{r}
 set.seed(20230202)
 df <- 1:10 |>
   purrr::map(\(x) sample(0:5, 25, replace = T)) |>
@@ -13,9 +33,15 @@ df <- dplyr::bind_cols(
     magrittr::set_colnames('Departamento'),
   df
 )
-df %>% write.csv('C:/Users/pedro.ribeiro/Desktop/Pedro/MOVE/tcc/tri_project/Data/irt.csv')
+df
+```
 
+## IRT Modelo
 
+```{r}
+# TRI model - graded response model (Samejima, 1969)
+# Samejima, F. (1969). Estimation of latent ability using a response pattern of graded scores.
+# Psychometrika Monographs, 34.
 model_grm <- mirt(df, itemtype = 'graded')
 
 # Estimate the model parameters
@@ -23,57 +49,83 @@ fit_grm <- fscores(model_grm)
 
 # Display the estimated item parameters (discrimination and thresholds)
 item_parameters <- coef(model_grm)
+```
+
+### Parameters
+
+```{r}
 for (i in 1:(length(item_parameters)-1)) {
   cat("Item", i, ":\n")
   cat("Discrimination (a):", item_parameters[[i]][1,'a1'], "\n")
   cat("Thresholds (b1, b2, b3, ...):", item_parameters[[i]][1, -1], "\n")
   cat("\n")
 }
+```
 
+### Plots
+
+```{r}
 # You can also make item response predictions using the fitted model if needed
 plot(model_grm)
+```
+
+```{r}
 plot(model_grm, type = 'trace')
+```
+
+```{r}
 plot(model_grm, type = 'itemscore')
+```
 
+# Data Generation
+## GANs Model
 
+Data generated with Generative Adversarial Network (GAN)
 
+```{r}
+new_irt <- read_csv("Data/new_irt_gan.csv")
+```
 
+```{r}
+fields::stats(new_irt) %>% t()
+```
 
+```{r}
+model_grm <- mirt(df, itemtype = 'graded')
+fit_grm <- fscores(model_grm)
+item_parameters <- coef(model_grm)
+```
 
-
-
-
-
-new_irt <- read_csv("new_irt.csv") %>% dplyr::select(-Departamento) %>%
-  mutate_all(as.integer)
-
-model_new_grm <- mirt(new_irt, itemtype = 'graded')
-
-# Estimate the model parameters
-fit_new_grm <- fscores(model_new_grm)
-
-# Display the estimated item parameters (discrimination and thresholds)
-item_parameters <- coef(model_new_grm)
+```{r}
 for (i in 1:(length(item_parameters)-1)) {
   cat("Item", i, ":\n")
   cat("Discrimination (a):", item_parameters[[i]][1,'a1'], "\n")
   cat("Thresholds (b1, b2, b3, ...):", item_parameters[[i]][1, -1], "\n")
   cat("\n")
 }
+```
 
-# You can also make item response predictions using the fitted model if needed
+```{r}
+plot(model_grm)
+```
 
-plot(model_new_grm)
-plot(model_new_grm, type = 'trace')
-plot(model_new_grm, type = 'itemscore')
+```{r}
+plot(model_grm, type = 'trace')
+```
 
+```{r}
+plot(model_grm, type = 'itemscore')
+```
 
+## Bootstrap
 
-
-
+```{r}
 # Load the necessary libraries
 library(boot)
+```
 
+
+```{r}
 # Create an empty list to store augmented datasets
 augmented_datasets <- list()
 
@@ -89,12 +141,16 @@ for (i in 1:num_bootstrap_samples) {
   # Store the bootstrap sample in the list of augmented datasets
   augmented_datasets[[i]] <- bootstrap_sample
 }
+```
 
+```{r}
 # Access one of the augmented datasets (for example, the first one)
 first_augmented_dataset <- do.call(rbind, augmented_datasets)
 rownames(first_augmented_dataset) <- NULL
 first_augmented_dataset
+```
 
+```{r}
 model_boot_grm <- mirt(first_augmented_dataset, itemtype = 'graded')
 
 # Estimate the model parameters
@@ -108,9 +164,61 @@ for (i in 1:(length(item_parameters)-1)) {
   cat("Thresholds (b1, b2, b3, ...):", item_parameters[[i]][1, -1], "\n")
   cat("\n")
 }
+```
 
-# You can also make item response predictions using the fitted model if needed
-
+```{r}
 plot(model_boot_grm)
+```
+
+```{r}
 plot(model_boot_grm, type = 'trace')
+```
+
+```{r}
 plot(model_boot_grm, type = 'itemscore')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
