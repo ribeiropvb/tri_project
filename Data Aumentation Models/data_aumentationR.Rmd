@@ -22,17 +22,9 @@ knitr::opts_chunk$set(
 # Data Simulation Method
 
 ```{r}
+root_path = 'C:/Users/pedro.ribeiro/Desktop/Pedro/MOVE/tcc/data_generation_with_tri/tri_project/'
 set.seed(20230202)
-df <- 1:10 |>
-  purrr::map(\(x) sample(0:5, 25, replace = T)) |>
-  dplyr::bind_cols() |>
-  magrittr::set_colnames(paste0('Q',1:10))
-
-df <- dplyr::bind_cols(
- sample(1:6, 25, replace = T) |> dplyr::as_tibble() |>
-    magrittr::set_colnames('Departamento'),
-  df
-)
+df <- read_csv(paste0(root_path,"Data/irt.csv"), col_types = cols(...1 = col_skip()))
 df
 ```
 
@@ -62,6 +54,15 @@ for (i in 1:(length(item_parameters)-1)) {
 }
 ```
 
+#### Discriminant
+
+```{r}
+sapply(item_parameters, function(x) x[1]) %>%
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  magrittr::set_colnames(c('question', 'discrimination_parameter'))
+```
+
 ### Plots
 
 ```{r}
@@ -83,7 +84,7 @@ plot(model_grm, type = 'itemscore')
 Data generated with Generative Adversarial Network (GAN)
 
 ```{r}
-new_irt <- read_csv("Data/new_irt_gan.csv")
+new_irt <- read_csv(paste0(root_path, "Data/new_irt_gan.csv"))
 ```
 
 ```{r}
@@ -147,7 +148,8 @@ for (i in 1:num_bootstrap_samples) {
 # Access one of the augmented datasets (for example, the first one)
 first_augmented_dataset <- do.call(rbind, augmented_datasets)
 rownames(first_augmented_dataset) <- NULL
-first_augmented_dataset
+first_augmented_dataset[1:num_bootstrap_samples,] %>% 
+  write.csv(paste0(root_path,"Data/new_irt_boot.csv"))
 ```
 
 ```{r}
